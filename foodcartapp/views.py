@@ -1,8 +1,11 @@
+import json
+
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
+from django.views.decorators.csrf import csrf_exempt
 
-
-from .models import Product
+from .models import Product, Order, OrderProduct
 
 
 def banners_list_api(request):
@@ -57,6 +60,33 @@ def product_list_api(request):
     })
 
 
+@csrf_exempt
 def register_order(request):
-    # TODO это лишь заглушка
-    return JsonResponse({})
+    if request.method == 'POST':
+        try:
+            order_request = json.loads(request.body.decode())
+        except ValueError:
+            return JsonResponse({
+                'error': 'Невалидный JSON',
+            })
+
+        order = Order.objects.create(
+            customer_firstname=order_request['firstname'],
+            customer_lastname=order_request['lastname'],
+            customer_phone=order_request['phonenumber'],
+            customer_address=order_request['address'],
+        )
+
+        for product in order_request['products']:
+            item = OrderProduct.objects.create(
+                order=order,
+                product=get_object_or_404(Product, pk=product['product']),
+                quantity=product['quantity']
+            )
+
+        return JsonResponse({
+            'message': 'Order registered successfully',
+            'order': order_request,
+        })
+
+    return JsonResponse({'error': 'Invalid request method'})

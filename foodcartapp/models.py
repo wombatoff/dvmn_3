@@ -1,3 +1,4 @@
+from phonenumber_field.modelfields import PhoneNumberField
 from django.db import models
 from django.core.validators import MinValueValidator
 
@@ -88,6 +89,9 @@ class Product(models.Model):
     class Meta:
         verbose_name = 'товар'
         verbose_name_plural = 'товары'
+        indexes = [
+            models.Index(fields=['name'], name='name_idx'),
+        ]
 
     def __str__(self):
         return self.name
@@ -121,3 +125,55 @@ class RestaurantMenuItem(models.Model):
 
     def __str__(self):
         return f"{self.restaurant.name} - {self.product.name}"
+
+
+class Order(models.Model):
+    customer_firstname = models.CharField(
+        verbose_name='имя',
+        max_length=50,
+        blank=False,
+        null=False,
+    )
+    customer_lastname = models.CharField(
+        verbose_name='фамилия',
+        max_length=50,
+        blank=False,
+        null=False,
+    )
+    customer_phone = PhoneNumberField(
+        blank=False,
+        null=False,
+    )
+    customer_address = models.CharField(
+        verbose_name='адрес',
+        max_length=100,
+        blank=False,
+        null=False,
+    )
+    products = models.ManyToManyField(
+        'Product',
+        through='OrderProduct',
+        verbose_name='продукты',
+        related_name='products',
+        blank=False,
+        null=False,
+    )
+
+    class Meta:
+        verbose_name = 'заказ'
+        verbose_name_plural = 'заказы'
+        indexes = [
+            models.Index(fields=['customer_firstname', 'customer_lastname'])
+        ]
+
+    def __str__(self):
+        return f"{self.customer_firstname} {self.customer_lastname}"
+
+
+class OrderProduct(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ('order', 'product')
