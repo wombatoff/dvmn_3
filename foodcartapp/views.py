@@ -1,11 +1,10 @@
-import json
-
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
 from django.templatetags.static import static
-from django.views.decorators.csrf import csrf_exempt
+from rest_framework import generics
+from rest_framework.response import Response
 
-from .models import Product, Order, OrderProduct
+from .models import Product, Order
+from .serializers import OrderWriteSerializer, OrderReadSerializer
 
 
 def banners_list_api(request):
@@ -60,33 +59,16 @@ def product_list_api(request):
     })
 
 
-@csrf_exempt
-def register_order(request):
-    if request.method == 'POST':
-        try:
-            order_request = json.loads(request.body.decode())
-        except ValueError:
-            return JsonResponse({
-                'error': 'Невалидный JSON',
-            })
+class OrderCreateView(generics.CreateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderWriteSerializer
 
-        order = Order.objects.create(
-            customer_firstname=order_request['firstname'],
-            customer_lastname=order_request['lastname'],
-            customer_phone=order_request['phonenumber'],
-            customer_address=order_request['address'],
-        )
+    def create(self, request, *args, **kwargs):
+        write_serializer = self.get_serializer(data=request.data)
+        write_serializer.is_valid(raise_exception=True)
+        order_instance = self.perform_create(write_serializer)
+        read_serializer = OrderReadSerializer(order_instance)
+        return Response(read_serializer.data)
 
-        for product in order_request['products']:
-            item = OrderProduct.objects.create(
-                order=order,
-                product=get_object_or_404(Product, pk=product['product']),
-                quantity=product['quantity']
-            )
-
-        return JsonResponse({
-            'message': 'Order registered successfully',
-            'order': order_request,
-        })
-
-    return JsonResponse({'error': 'Invalid request method'})
+    def perform_create(self, serializer):
+        return serializer.save()

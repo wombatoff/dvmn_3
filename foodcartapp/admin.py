@@ -118,16 +118,16 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = [OrderProductInline]
     list_display = (
         'id',
-        'customer_firstname',
-        'customer_lastname',
-        'customer_phone',
-        'customer_address',
+        'firstname',
+        'lastname',
+        'phonenumber',
+        'address',
     )
     search_fields = (
         'id',
-        'customer_firstname',
-        'customer_lastname',
-        'customer_phone',
-        'customer_address',
+        'firstname',
+        'lastname',
+        'phonenumber',
+        'address',
     )
 
