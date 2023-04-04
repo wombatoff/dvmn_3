@@ -17,6 +17,11 @@ class OrderWriteSerializer(serializers.ModelSerializer):
         model = Order
         fields = ('firstname', 'lastname', 'phonenumber', 'address', 'products')
 
+    def validate_products(self, products):
+        if not products:
+            raise serializers.ValidationError("Список продуктов не может быть пустым.")
+        return products
+
     def create(self, validated_data):
         products_data = validated_data.pop('products')
         order = Order.objects.create(**validated_data)
