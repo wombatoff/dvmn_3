@@ -1,7 +1,8 @@
 from django.db import transaction
-
 from rest_framework import serializers
+
 from .models import Order, Product, OrderProduct
+from .utils import create_order_restaurant_info
 
 
 class OrderProductWriteSerializer(serializers.ModelSerializer):
@@ -38,6 +39,9 @@ class OrderWriteSerializer(serializers.ModelSerializer):
                 price=product.price,
                 quantity=order_product['quantity']
             )
+
+        create_order_restaurant_info(order)
+
         return order
 
 

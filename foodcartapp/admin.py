@@ -7,6 +7,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 
 from .models import Order
 from .models import OrderProduct
+from .models import OrderRestaurantInfo
 from .models import Product
 from .models import ProductCategory
 from .models import Restaurant
@@ -31,7 +32,7 @@ class RestaurantAdmin(admin.ModelAdmin):
         'contact_phone',
     ]
     inlines = [
-        RestaurantMenuItemInline
+        RestaurantMenuItemInline,
     ]
 
 
@@ -57,7 +58,7 @@ class ProductAdmin(admin.ModelAdmin):
     ]
 
     inlines = [
-        RestaurantMenuItemInline
+        RestaurantMenuItemInline,
     ]
     fieldsets = (
         ('Общее', {
@@ -118,9 +119,20 @@ class OrderProductInline(admin.TabularInline):
     extra = 1
 
 
+class OrderRestaurantInfoInline(admin.TabularInline):
+    model = OrderRestaurantInfo
+    fields = ('restaurant', 'can_prepare_order', 'distance')
+    readonly_fields = ('restaurant', 'can_prepare_order', 'distance')
+    extra = 0
+    can_delete = False
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    inlines = [OrderProductInline]
+    inlines = [
+        OrderRestaurantInfoInline,
+        OrderProductInline,
+    ]
     list_display = (
         'id',
         'status',
@@ -131,6 +143,7 @@ class OrderAdmin(admin.ModelAdmin):
         'firstname',
         'lastname',
         'phonenumber',
+        'assigned_restaurant',
         'address',
     )
     search_fields = (
@@ -148,3 +161,10 @@ class OrderAdmin(admin.ModelAdmin):
                                                         require_https=request.is_secure()):
             return redirect(next_url)
         return response
+
+
+@admin.register(OrderRestaurantInfo)
+class OrderRestaurantInfoAdmin(admin.ModelAdmin):
+    list_display = ('order', 'restaurant', 'can_prepare_order', 'distance')
+    list_filter = ('can_prepare_order',)
+    search_fields = ('order__id', 'restaurant__name')

@@ -21,11 +21,11 @@
       <th>Телефон</th>
       <th>Адрес доставки</th>
       <th>Комментарии</th>
+      <th>Рестораны</th>
       <th>Действия</th>
-      <th></th>
     </tr>
 
-    {% for order in orders %}
+    {% for order, restaurants in orders_with_restaurants %}
       <tr>
         <td>{{ order.id }}</td>
         <td>{{ order.status }}</td>
@@ -36,15 +36,31 @@
         <td>{{ order.address }}</td>
         <td>{{ order.comments }}</td>
         <td>
+          {% if order.assigned_restaurant %}
+            Готовит {{ order.assigned_restaurant.name }}
+          {% else %}
+          <details>
+            <summary>
+              Возможно приготовить в:
+              <span class="details-marker bi bi-chevron-down"></span>
+            </summary>
+            <ul>
+              {% for restaurant_info in restaurants %}
+                <li>{{ restaurant_info.restaurant.name }} - {{ restaurant_info.distance|floatformat:2 }} км</li>
+              {% endfor %}
+            </ul>
+          </details>
+          {% endif %}
+        </td>
+        <td>
           <a href="{% url 'admin:foodcartapp_order_change' order.id %}?next={{ request.path|urlencode }}">Редактировать</a>
         </td>
-        </td>
       </tr>
-    {% empty %}
-      <tr>
-        <td colspan="6">Нет необработанных заказов</td>
-      </tr>
-    {% endfor %}
+      {% empty %}
+        <tr>
+          <td colspan="9">Нет необработанных заказов</td>
+        </tr>
+      {% endfor %}
    </table>
   </div>
 {% endblock %}

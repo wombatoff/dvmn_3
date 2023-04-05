@@ -1,9 +1,8 @@
-from phonenumber_field.modelfields import PhoneNumberField
-from django.db import models
 from django.core.validators import MinValueValidator
+from django.db import models
 from django.db.models import F, Sum
-
 from django.utils import timezone
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class Restaurant(models.Model):
@@ -216,6 +215,13 @@ class Order(models.Model):
         blank=False,
     )
     comments = models.TextField(blank=True)
+    assigned_restaurant = models.ForeignKey(
+        Restaurant,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='назначенный ресторан',
+    )
     objects = OrderQuerySet.as_manager()
 
     class Meta:
@@ -246,3 +252,32 @@ class OrderProduct(models.Model):
 
     class Meta:
         unique_together = ('order', 'product')
+
+
+class OrderRestaurantInfo(models.Model):
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='restaurant_info',
+    )
+    restaurant = models.ForeignKey(
+        Restaurant,
+        on_delete=models.CASCADE,
+        related_name='order_info'
+    )
+    can_prepare_order = models.BooleanField(
+        default=False,
+        verbose_name='может подготовить заказ'
+    )
+    distance = models.FloatField(
+        null=True,
+        blank=True,
+        verbose_name='расстояние до ресторана')
+
+    class Meta:
+        verbose_name = 'Возможность ресторана обработать заказ'
+        verbose_name_plural = 'Возможность ресторана обработать заказ'
+        unique_together = ('order', 'restaurant')
+
+    def __str__(self):
+        return f"{self.restaurant.name} - {self.distance} km"
