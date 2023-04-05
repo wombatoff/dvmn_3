@@ -124,6 +124,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'status',
+        'payment_method',
         'order_date',
         'call_date',
         'delivery_date',

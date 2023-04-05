@@ -143,6 +143,9 @@ RESTAURANT_PROCESSING = 'обработка рестораном'
 COURIER_DELIVERY = 'доставка курьером'
 COMPLETED = 'завершен'
 
+ONLINE_PAYMENT = 'электронно'
+CASH_PAYMENT = 'наличными'
+
 
 class Order(models.Model):
     ORDER_STATUS_CHOICES = [
@@ -152,12 +155,21 @@ class Order(models.Model):
         (COURIER_DELIVERY, COURIER_DELIVERY),
         (COMPLETED, COMPLETED),
     ]
-
     status = models.CharField(
         max_length=36,
         choices=ORDER_STATUS_CHOICES,
         default=NEW,
         verbose_name='статус заказа',
+    )
+    PAYMENT_CHOICES = [
+        (ONLINE_PAYMENT, ONLINE_PAYMENT),
+        (CASH_PAYMENT, CASH_PAYMENT),
+    ]
+    payment_method = models.CharField(
+        max_length=10,
+        choices=PAYMENT_CHOICES,
+        default=CASH_PAYMENT,
+        verbose_name='способ оплаты',
     )
     order_date = models.DateTimeField(
         default=timezone.now,
