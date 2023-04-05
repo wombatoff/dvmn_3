@@ -131,7 +131,7 @@ class RestaurantMenuItem(models.Model):
 class OrderQuerySet(models.QuerySet):
     def with_total_cost(self):
         return self.annotate(
-            total_cost=Sum(F('order_products__product__price') * F('order_products__quantity'))
+            total_cost=Sum(F('order_products__price') * F('order_products__quantity'))
         )
 
 
@@ -181,7 +181,17 @@ class Order(models.Model):
 class OrderProduct(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_products')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField(
+        'количество',
+        default=1,
+        validators=[MinValueValidator(1)]
+    )
+    price = models.DecimalField(
+        'цена',
+        max_digits=8,
+        decimal_places=2,
+        validators=[MinValueValidator(0)]
+    )
 
     class Meta:
         unique_together = ('order', 'product')

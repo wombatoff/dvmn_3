@@ -4,10 +4,12 @@ from .models import Order, Product, OrderProduct
 
 class OrderProductWriteSerializer(serializers.ModelSerializer):
     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
+    quantity = serializers.IntegerField(min_value=1)
+    price = serializers.DecimalField(max_digits=8, decimal_places=2, required=False)
 
     class Meta:
         model = OrderProduct
-        fields = ['product', 'quantity']
+        fields = ('product', 'quantity', 'price')
 
 
 class OrderWriteSerializer(serializers.ModelSerializer):
@@ -23,14 +25,29 @@ class OrderWriteSerializer(serializers.ModelSerializer):
         return products
 
     def create(self, validated_data):
-        products_data = validated_data.pop('products')
+        order_products = validated_data.pop('products')
         order = Order.objects.create(**validated_data)
-        for product_data in products_data:
-            OrderProduct.objects.create(order=order, **product_data)
+        for order_product in order_products:
+            product = order_product['product']
+            OrderProduct.objects.create(
+                order=order,
+                product=product,
+                price=product.price,
+                quantity=order_product['quantity']
+            )
         return order
 
 
 class OrderReadSerializer(serializers.ModelSerializer):
+    total_cost = serializers.SerializerMethodField()
+
     class Meta:
         model = Order
-        fields = ('id', 'firstname', 'lastname', 'phonenumber', 'address')
+        fields = ('id', 'firstname', 'lastname', 'phonenumber', 'address', 'total_cost')
+
+    def get_total_cost(self, obj):
+        total_cost = 0
+        order_products = OrderProduct.objects.filter(order=obj)
+        for order_product in order_products:
+            total_cost += order_product.price * order_product.quantity
+        return total_cost
