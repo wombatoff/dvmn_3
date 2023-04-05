@@ -185,6 +185,7 @@ class Order(models.Model):
         related_name='products',
         blank=False,
     )
+    comments = models.TextField(blank=True)
     objects = OrderQuerySet.as_manager()
 
     class Meta:
