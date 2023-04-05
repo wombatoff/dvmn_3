@@ -123,6 +123,10 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = [OrderProductInline]
     list_display = (
         'id',
+        'status',
+        'order_date',
+        'call_date',
+        'delivery_date',
         'firstname',
         'lastname',
         'phonenumber',

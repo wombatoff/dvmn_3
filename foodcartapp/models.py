@@ -3,6 +3,8 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.db.models import F, Sum
 
+from django.utils import timezone
+
 
 class Restaurant(models.Model):
     name = models.CharField(
@@ -155,7 +157,23 @@ class Order(models.Model):
         max_length=36,
         choices=ORDER_STATUS_CHOICES,
         default=NEW,
+        verbose_name='статус заказа',
     )
+    order_date = models.DateTimeField(
+        default=timezone.now,
+        verbose_name='дата заказа',
+    )
+    call_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='дата звонка',
+    )
+    delivery_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='дата доставки',
+    )
+
     firstname = models.CharField(
         verbose_name='имя',
         max_length=50,
