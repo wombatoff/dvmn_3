@@ -135,7 +135,27 @@ class OrderQuerySet(models.QuerySet):
         )
 
 
+NEW = 'новый'
+MANAGER_REVIEW = 'подтверждение менеджером'
+RESTAURANT_PROCESSING = 'обработка рестораном'
+COURIER_DELIVERY = 'доставка курьером'
+COMPLETED = 'завершен'
+
+
 class Order(models.Model):
+    ORDER_STATUS_CHOICES = [
+        (NEW, NEW),
+        (MANAGER_REVIEW, MANAGER_REVIEW),
+        (RESTAURANT_PROCESSING, RESTAURANT_PROCESSING),
+        (COURIER_DELIVERY, COURIER_DELIVERY),
+        (COMPLETED, COMPLETED),
+    ]
+
+    status = models.CharField(
+        max_length=36,
+        choices=ORDER_STATUS_CHOICES,
+        default=NEW,
+    )
     firstname = models.CharField(
         verbose_name='имя',
         max_length=50,
