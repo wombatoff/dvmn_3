@@ -141,6 +141,7 @@ class OrderAdmin(admin.ModelAdmin):
         'id',
         'status',
         'payment_method',
+        'total_cost_annotation',
         'order_date',
         'call_date',
         'delivery_date',
@@ -158,6 +159,11 @@ class OrderAdmin(admin.ModelAdmin):
         'address',
     )
     change_form_template = 'admin/order_change_form.html'
+
+    def total_cost_annotation(self, obj):
+        return obj.total_cost
+
+    total_cost_annotation.short_description = 'Сумма заказа'
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)

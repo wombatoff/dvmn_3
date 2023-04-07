@@ -90,7 +90,7 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.with_total_cost()
+    orders = Order.objects.all()
     orders_with_restaurants = []
 
     for order in orders:

@@ -34,6 +34,7 @@ class Restaurant(models.Model):
         blank=True,
         verbose_name="долгота"
     )
+
     class Meta:
         verbose_name = 'ресторан'
         verbose_name_plural = 'рестораны'
@@ -142,10 +143,10 @@ class RestaurantMenuItem(models.Model):
         return f"{self.restaurant.name} - {self.product.name}"
 
 
-class OrderQuerySet(models.QuerySet):
-    def with_total_cost(self):
-        return self.annotate(
-            total_cost=Sum(F('order_products__price') * F('order_products__quantity'))
+class OrderManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().annotate(
+            total_cost=Sum(F('order_products__quantity') * F('order_products__product__price'))
         )
 
 
@@ -232,7 +233,7 @@ class Order(models.Model):
         blank=True,
         verbose_name='назначенный ресторан',
     )
-    objects = OrderQuerySet.as_manager()
+    objects = OrderManager()
 
     class Meta:
         verbose_name = 'заказ'

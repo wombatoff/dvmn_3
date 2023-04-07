@@ -4,7 +4,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 
 from .models import Product, Order
-from .serializers import OrderWriteSerializer, OrderReadSerializer
+from .serializers import OrderSerializer
 
 
 def banners_list_api(request):
@@ -61,14 +61,13 @@ def product_list_api(request):
 
 class OrderCreateView(generics.CreateAPIView):
     queryset = Order.objects.all()
-    serializer_class = OrderWriteSerializer
+    serializer_class = OrderSerializer
 
     def create(self, request, *args, **kwargs):
-        write_serializer = self.get_serializer(data=request.data)
-        write_serializer.is_valid(raise_exception=True)
-        order_instance = self.perform_create(write_serializer)
-        read_serializer = OrderReadSerializer(order_instance)
-        return Response(read_serializer.data)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        _order_instance = self.perform_create(serializer)
+        return Response(serializer.data)
 
     def perform_create(self, serializer):
         return serializer.save()

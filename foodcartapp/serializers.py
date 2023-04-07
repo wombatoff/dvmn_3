@@ -5,7 +5,7 @@ from .models import Order, Product, OrderProduct
 from .utils import fetch_coordinates
 
 
-class OrderProductWriteSerializer(serializers.ModelSerializer):
+class OrderProductSerializer(serializers.ModelSerializer):
     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
     quantity = serializers.IntegerField(min_value=1)
     price = serializers.DecimalField(max_digits=8, decimal_places=2, required=False)
@@ -15,16 +15,18 @@ class OrderProductWriteSerializer(serializers.ModelSerializer):
         fields = ('product', 'quantity', 'price')
 
 
-class OrderWriteSerializer(serializers.ModelSerializer):
+class OrderSerializer(serializers.ModelSerializer):
     firstname = serializers.CharField(required=True)
     lastname = serializers.CharField(required=True)
     phonenumber = serializers.CharField(required=True)
     address = serializers.CharField(required=True)
-    products = OrderProductWriteSerializer(many=True)
+    products = OrderProductSerializer(many=True, source='order_products')
+    total_cost = serializers.DecimalField(max_digits=8, decimal_places=2, read_only=True)
 
     class Meta:
         model = Order
-        fields = ('firstname', 'lastname', 'phonenumber', 'address', 'products')
+        fields = ('id', 'firstname', 'lastname', 'phonenumber', 'address', 'products', 'total_cost')
+        read_only_fields = ('total_cost',)
 
     def validate_products(self, products):
         if not products:
@@ -33,7 +35,7 @@ class OrderWriteSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        order_products = validated_data.pop('products')
+        order_products = validated_data.pop('order_products')
         order_coordinates = fetch_coordinates(validated_data['address'])
         if order_coordinates:
             longitude, latitude = order_coordinates
@@ -51,17 +53,12 @@ class OrderWriteSerializer(serializers.ModelSerializer):
             )
         return order
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep.pop('products', None)
+        return rep
 
-class OrderReadSerializer(serializers.ModelSerializer):
-    total_cost = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Order
-        fields = ('id', 'firstname', 'lastname', 'phonenumber', 'address', 'total_cost')
-
-    def get_total_cost(self, obj):
-        total_cost = 0
-        order_products = OrderProduct.objects.filter(order=obj)
-        for order_product in order_products:
-            total_cost += order_product.price * order_product.quantity
-        return total_cost
+    def to_internal_value(self, data):
+        internal = super().to_internal_value(data)
+        internal['order_products'] = OrderProductSerializer(many=True).to_internal_value(data['products'])
+        return internal
