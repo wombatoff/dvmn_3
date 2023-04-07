@@ -25,7 +25,7 @@
       <th>Действия</th>
     </tr>
 
-    {% for order, restaurants in orders_with_restaurants %}
+    {% for order, info in orders_with_restaurants %}
       <tr>
         <td>{{ order.id }}</td>
         <td>{{ order.status }}</td>
@@ -37,19 +37,21 @@
         <td>{{ order.comments }}</td>
         <td>
           {% if order.assigned_restaurant %}
-            Готовит {{ order.assigned_restaurant.name }}
+              Готовит {{ order.assigned_restaurant.name }}
+          {% elif info == "Координаты заказа отсутствуют" %}
+              {{ info }}
           {% else %}
-          <details>
-            <summary>
-              Возможно приготовить в:
-              <span class="details-marker bi bi-chevron-down"></span>
-            </summary>
-            <ul>
-              {% for restaurant_info in restaurants %}
-                <li>{{ restaurant_info.restaurant.name }} - {{ restaurant_info.distance|floatformat:2 }} км</li>
-              {% endfor %}
-            </ul>
-          </details>
+              <details>
+                  <summary>
+                      Возможно приготовить в:
+                      <span class="details-marker bi bi-chevron-down"></span>
+                  </summary>
+                  <ul>
+                      {% for restaurant_info in info %}
+                          <li>{{ restaurant_info.restaurant.name }} - {{ restaurant_info.distance|floatformat:2 }} км</li>
+                      {% endfor %}
+                  </ul>
+              </details>
           {% endif %}
         </td>
         <td>

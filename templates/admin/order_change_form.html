@@ -1,0 +1,21 @@
+{% extends 'admin/change_form.html' %}
+
+{% block after_field_sets %}
+    <fieldset>
+        <legend>Информация о ресторанах</legend>
+        <table class="table table-bordered">
+            <tr>
+                <th>Название ресторана</th>
+                <th>Может приготовить</th>
+                <th>Расстояние до ресторана</th>
+            </tr>
+            {% for info in restaurants_info %}
+                <tr>
+                    <td>{{ info.restaurant.name }}</td>
+                    <td>{{ info.can_prepare|yesno:"Да,Нет" }}</td>
+                    <td>{{ info.distance|floatformat:2 }} км</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </fieldset>
+{% endblock %}

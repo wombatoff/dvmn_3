@@ -3,7 +3,7 @@ from math import sin, cos, sqrt, atan2, radians
 import requests
 from django.conf import settings
 
-from .models import Order, Restaurant, OrderRestaurantInfo, RestaurantMenuItem
+from .models import Order, Restaurant, RestaurantMenuItem
 
 
 def get_eligible_restaurants(order: Order):
@@ -61,25 +61,3 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     central_angle = 2 * atan2(sqrt(sin_half_dist_sqr), sqrt(1 - sin_half_dist_sqr))
 
     return earth_radius_in_km * central_angle
-
-
-def create_order_restaurant_info(order: Order):
-    order_coordinates = fetch_coordinates(order.address, )
-
-    for restaurant in Restaurant.objects.all():
-        restaurant_coordinates = fetch_coordinates(restaurant.address)
-        distance = None
-        if order_coordinates and restaurant_coordinates:
-            distance = calculate_distance(
-                order_coordinates[1], order_coordinates[0],
-                restaurant_coordinates[1], restaurant_coordinates[0]
-            )
-
-        can_prepare_order = restaurant in get_eligible_restaurants(order)
-
-        OrderRestaurantInfo.objects.create(
-            order=order,
-            restaurant=restaurant,
-            can_prepare_order=can_prepare_order,
-            distance=round(distance, 2) if distance else None,
-        )

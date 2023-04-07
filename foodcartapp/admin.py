@@ -1,3 +1,5 @@
+from urllib.parse import unquote
+
 from django.contrib import admin
 from django.shortcuts import redirect
 from django.shortcuts import reverse
@@ -7,11 +9,11 @@ from django.utils.http import url_has_allowed_host_and_scheme
 
 from .models import Order
 from .models import OrderProduct
-from .models import OrderRestaurantInfo
 from .models import Product
 from .models import ProductCategory
 from .models import Restaurant
 from .models import RestaurantMenuItem
+from .utils import fetch_coordinates, get_eligible_restaurants, calculate_distance
 
 
 class RestaurantMenuItemInline(admin.TabularInline):
@@ -25,15 +27,26 @@ class RestaurantAdmin(admin.ModelAdmin):
         'name',
         'address',
         'contact_phone',
+
     ]
     list_display = [
         'name',
         'address',
         'contact_phone',
+        'latitude',
+        'longitude',
     ]
     inlines = [
         RestaurantMenuItemInline,
     ]
+
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            if not (obj.latitude and obj.longitude):
+                longitude, latitude = fetch_coordinates(obj.address)
+                obj.latitude = latitude
+                obj.longitude = longitude
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Product)
@@ -119,18 +132,9 @@ class OrderProductInline(admin.TabularInline):
     extra = 1
 
 
-class OrderRestaurantInfoInline(admin.TabularInline):
-    model = OrderRestaurantInfo
-    fields = ('restaurant', 'can_prepare_order', 'distance')
-    readonly_fields = ('restaurant', 'can_prepare_order', 'distance')
-    extra = 0
-    can_delete = False
-
-
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     inlines = [
-        OrderRestaurantInfoInline,
         OrderProductInline,
     ]
     list_display = (
@@ -153,6 +157,12 @@ class OrderAdmin(admin.ModelAdmin):
         'phonenumber',
         'address',
     )
+    change_form_template = 'admin/order_change_form.html'
+
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request, obj)
+        fields = [field for field in fields if field not in ['latitude', 'longitude']]
+        return fields
 
     def response_change(self, request, obj):
         response = super().response_change(request, obj)
@@ -162,9 +172,27 @@ class OrderAdmin(admin.ModelAdmin):
             return redirect(next_url)
         return response
 
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        extra_context = extra_context or {}
+        obj = self.get_object(request, unquote(object_id)) if object_id else None
 
-@admin.register(OrderRestaurantInfo)
-class OrderRestaurantInfoAdmin(admin.ModelAdmin):
-    list_display = ('order', 'restaurant', 'can_prepare_order', 'distance')
-    list_filter = ('can_prepare_order',)
-    search_fields = ('order__id', 'restaurant__name')
+        if obj:
+            restaurants_info = []
+
+            eligible_restaurants = get_eligible_restaurants(obj)
+            for restaurant in Restaurant.objects.all():
+                distance = None
+                if obj.latitude and obj.longitude and restaurant.latitude and restaurant.longitude:
+                    distance = calculate_distance(obj.latitude, obj.longitude, restaurant.latitude,
+                                                  restaurant.longitude)
+
+                can_prepare = restaurant in eligible_restaurants
+                restaurants_info.append({
+                    'restaurant': restaurant,
+                    'distance': distance,
+                    'can_prepare': can_prepare,
+                })
+
+            extra_context['restaurants_info'] = restaurants_info
+
+        return super().changeform_view(request, object_id, form_url, extra_context)

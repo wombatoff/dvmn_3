@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from django.views import View
 
 from foodcartapp.models import Product, Restaurant, Order
-
+from foodcartapp.utils import calculate_distance, get_eligible_restaurants
 
 class Login(forms.Form):
     username = forms.CharField(
@@ -94,12 +94,27 @@ def view_orders(request):
     orders_with_restaurants = []
 
     for order in orders:
-        selected_restaurant = order.restaurant_info.filter(can_prepare_order=True)
-        if selected_restaurant.exists():
-            orders_with_restaurants.append((order, selected_restaurant))
-        else:
-            eligible_restaurant_info = order.restaurant_info.filter(can_prepare_order=True)
-            orders_with_restaurants.append((order, eligible_restaurant_info))
+        order_coordinates = (order.latitude, order.longitude)
+
+        if order_coordinates == (None, None):
+            orders_with_restaurants.append((order, "Координаты заказа отсутствуют"))
+            continue
+
+        eligible_restaurants = get_eligible_restaurants(order)
+        restaurant_distances = []
+        for restaurant in eligible_restaurants:
+            if restaurant.latitude is None or restaurant.longitude is None:
+                continue
+
+            distance = calculate_distance(order.latitude, order.longitude, restaurant.latitude, restaurant.longitude)
+            restaurant_distances.append({
+                'restaurant': restaurant,
+                'distance': distance,
+            })
+
+        restaurant_distances.sort(key=lambda x: x['distance'])
+
+        orders_with_restaurants.append((order, restaurant_distances))
 
     return render(
         request,

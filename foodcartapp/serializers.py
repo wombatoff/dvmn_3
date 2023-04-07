@@ -2,7 +2,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from .models import Order, Product, OrderProduct
-from .utils import create_order_restaurant_info
+from .utils import fetch_coordinates
 
 
 class OrderProductWriteSerializer(serializers.ModelSerializer):
@@ -22,7 +22,6 @@ class OrderWriteSerializer(serializers.ModelSerializer):
     address = serializers.CharField(required=True)
     products = OrderProductWriteSerializer(many=True)
 
-
     class Meta:
         model = Order
         fields = ('firstname', 'lastname', 'phonenumber', 'address', 'products')
@@ -35,7 +34,13 @@ class OrderWriteSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         order_products = validated_data.pop('products')
-        order = Order.objects.create(**validated_data)
+        order_coordinates = fetch_coordinates(validated_data['address'])
+        if order_coordinates:
+            longitude, latitude = order_coordinates
+            order = Order.objects.create(latitude=latitude, longitude=longitude, **validated_data)
+        else:
+            order = Order.objects.create(**validated_data)
+
         for order_product in order_products:
             product = order_product['product']
             OrderProduct.objects.create(
@@ -44,9 +49,6 @@ class OrderWriteSerializer(serializers.ModelSerializer):
                 price=product.price,
                 quantity=order_product['quantity']
             )
-
-        create_order_restaurant_info(order)
-
         return order
 
 

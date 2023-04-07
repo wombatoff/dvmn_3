@@ -20,7 +20,20 @@ class Restaurant(models.Model):
         max_length=50,
         blank=True,
     )
-
+    latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        verbose_name="широта"
+    )
+    longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        verbose_name="долгота"
+    )
     class Meta:
         verbose_name = 'ресторан'
         verbose_name_plural = 'рестораны'
@@ -167,6 +180,7 @@ class Order(models.Model):
     payment_method = models.CharField(
         max_length=10,
         choices=PAYMENT_CHOICES,
+        blank=True,
         verbose_name='способ оплаты',
     )
     order_date = models.DateTimeField(
@@ -189,6 +203,20 @@ class Order(models.Model):
 
     phonenumber = PhoneNumberField(verbose_name='телефон')
     address = models.CharField(verbose_name='адрес', max_length=100)
+    latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        verbose_name="широта"
+    )
+    longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+        verbose_name="долгота"
+    )
     products = models.ManyToManyField(
         'Product',
         through='OrderProduct',
@@ -233,32 +261,3 @@ class OrderProduct(models.Model):
 
     class Meta:
         unique_together = ('order', 'product')
-
-
-class OrderRestaurantInfo(models.Model):
-    order = models.ForeignKey(
-        Order,
-        on_delete=models.CASCADE,
-        related_name='restaurant_info',
-    )
-    restaurant = models.ForeignKey(
-        Restaurant,
-        on_delete=models.CASCADE,
-        related_name='order_info'
-    )
-    can_prepare_order = models.BooleanField(
-        default=False,
-        verbose_name='может подготовить заказ'
-    )
-    distance = models.FloatField(
-        null=True,
-        blank=True,
-        verbose_name='расстояние до ресторана')
-
-    class Meta:
-        verbose_name = 'Возможность ресторана обработать заказ'
-        verbose_name_plural = 'Возможность ресторана обработать заказ'
-        unique_together = ('order', 'restaurant')
-
-    def __str__(self):
-        return f"{self.restaurant.name} - {self.distance} km"
