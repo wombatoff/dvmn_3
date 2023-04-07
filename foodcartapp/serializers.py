@@ -16,7 +16,12 @@ class OrderProductWriteSerializer(serializers.ModelSerializer):
 
 
 class OrderWriteSerializer(serializers.ModelSerializer):
+    firstname = serializers.CharField(required=True)
+    lastname = serializers.CharField(required=True)
+    phonenumber = serializers.CharField(required=True)
+    address = serializers.CharField(required=True)
     products = OrderProductWriteSerializer(many=True)
+
 
     class Meta:
         model = Order

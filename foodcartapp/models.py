@@ -167,7 +167,6 @@ class Order(models.Model):
     payment_method = models.CharField(
         max_length=10,
         choices=PAYMENT_CHOICES,
-        default=CASH_PAYMENT,
         verbose_name='способ оплаты',
     )
     order_date = models.DateTimeField(
@@ -184,29 +183,12 @@ class Order(models.Model):
         null=True,
         verbose_name='дата доставки',
     )
+    firstname = models.CharField(verbose_name='имя', max_length=50)
 
-    firstname = models.CharField(
-        verbose_name='имя',
-        max_length=50,
-        blank=False,
-        null=False,
-    )
-    lastname = models.CharField(
-        verbose_name='фамилия',
-        max_length=50,
-        blank=False,
-        null=False,
-    )
-    phonenumber = PhoneNumberField(
-        blank=False,
-        null=False,
-    )
-    address = models.CharField(
-        verbose_name='адрес',
-        max_length=100,
-        blank=False,
-        null=False,
-    )
+    lastname = models.CharField(verbose_name='фамилия', max_length=50)
+
+    phonenumber = PhoneNumberField(verbose_name='телефон')
+    address = models.CharField(verbose_name='адрес', max_length=100)
     products = models.ManyToManyField(
         'Product',
         through='OrderProduct',
@@ -240,7 +222,6 @@ class OrderProduct(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(
         'количество',
-        default=1,
         validators=[MinValueValidator(1)]
     )
     price = models.DecimalField(
