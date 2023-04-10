@@ -28,7 +28,6 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ('id', 'firstname', 'lastname', 'phonenumber', 'address', 'products', 'total_cost')
         read_only_fields = ('total_cost',)
 
-
     @transaction.atomic
     def create(self, validated_data):
         order_products = validated_data.pop('order_products')
