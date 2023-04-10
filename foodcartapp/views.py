@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.templatetags.static import static
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.response import Response
 
 from .models import Product, Order
@@ -64,10 +64,13 @@ class OrderCreateView(generics.CreateAPIView):
     serializer_class = OrderSerializer
 
     def create(self, request, *args, **kwargs):
+        if not request.data.get('products'):
+            return Response(
+                {'products': ['Не указаны продукты в заказе!']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        _order_instance = self.perform_create(serializer)
+        serializer.save()
         return Response(serializer.data)
-
-    def perform_create(self, serializer):
-        return serializer.save()
