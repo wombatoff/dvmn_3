@@ -32,7 +32,6 @@ class LoginView(View):
         return render(request, "login.html", context={
             'form': form
         })
-
     def post(self, request):
         form = Login(request.POST)
 
