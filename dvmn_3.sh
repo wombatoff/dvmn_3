@@ -2,7 +2,6 @@
 
 set -e # stop script execution on any error
 set -o pipefail # consider errors in the pipeline
-trap 'deploy_failed' ERR
 
 # Загрузка переменных окружения из файла .env
 if [[ -f .env ]]; then
@@ -21,19 +20,22 @@ function deploy_failed {
   exit 1
 }
 
+function deploy_succeeded {
+  echo "Deployment succeeded! Notifying Rollbar..."
+  curl https://api.rollbar.com/api/1/deploy/ \
+    -F access_token=$ROLLBAR_ACCESS_TOKEN \
+    -F environment=production \
+    -F revision=$(git log -n 1 --pretty=format:"%H") \
+    -F local_username=$(whoami)
+}
+
+trap 'deploy_failed' ERR
 
 # Переходим в директорию с проектом
 cd /home/wombatoff/dvmn_3
 
 # Обновляем репозиторий
 git pull --no-edit
-
-# Уведомление Rollbar о деплое
-curl https://api.rollbar.com/api/1/deploy/ \
-  -F access_token=$ROLLBAR_ACCESS_TOKEN \
-  -F environment=production \
-  -F revision=$(git log -n 1 --pretty=format:"%H") \
-  -F local_username=$(whoami)
 
 # Активируем виртуальное окружение
 source venv/bin/activate
@@ -53,3 +55,6 @@ npm ci --dev
 
 # Перезапускаем gunicorn (убедитесь, что у вас настроена системная служба для gunicorn)
 sudo systemctl restart gunicorn
+
+# Отправляем уведомление о успешном деплое
+deploy_succeeded
