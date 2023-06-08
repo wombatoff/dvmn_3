@@ -44,7 +44,7 @@ python manage.py collectstatic --no-input
 
 # Установливаем пакеты Node.js
 npm ci --dev
-./node_modules/.bin/parcel watch bundles-src/index.js --dist-dir bundles --public-url="./"
+./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
 
 # Перезапускаем gunicorn (убедитесь, что у вас настроена системная служба для gunicorn)
 sudo systemctl restart gunicorn
