@@ -21,7 +21,7 @@ function deploy_failed {
 cd /home/wombatoff/dvmn_3
 
 # Обновляем репозиторий
-git pull
+git pull --no-edit
 
 # Уведомление Rollbar о деплое
 curl https://api.rollbar.com/api/1/deploy/ \
@@ -34,7 +34,7 @@ curl https://api.rollbar.com/api/1/deploy/ \
 source venv/bin/activate
 
 # Обновляем зависимости
-python -m pip install --upgrade pip && pip install -r requirements.txt --no-cache-dir
+yes | python -m pip install --upgrade pip && yes | pip install -r requirements.txt --no-cache-dir
 
 # Накатываем миграции БД
 python manage.py migrate
