@@ -4,10 +4,15 @@ set -e # stop script execution on any error
 set -o pipefail # consider errors in the pipeline
 trap 'deploy_failed' ERR
 
+# Загрузка переменных окружения из файла .env
+if [[ -f .env ]]; then
+  source .env
+fi
+
 function deploy_failed {
   echo "Deployment failed! Notifying Rollbar..."
   curl https://api.rollbar.com/api/1/item/ \
-    -H "X-Rollbar-Access-Token: c2eedbf883b644dca14781524e20688d" \
+    -H "X-Rollbar-Access-Token: $ROLLBAR_ACCESS_TOKEN" \
     -d environment=production \
     -d level=error \
     -d framework=bash \
@@ -25,7 +30,7 @@ git pull --no-edit
 
 # Уведомление Rollbar о деплое
 curl https://api.rollbar.com/api/1/deploy/ \
-  -F access_token=c2eedbf883b644dca14781524e20688d \
+  -F access_token=$ROLLBAR_ACCESS_TOKEN \
   -F environment=production \
   -F revision=$(git log -n 1 --pretty=format:"%H") \
   -F local_username=$(whoami)
