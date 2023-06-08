@@ -1,5 +1,22 @@
 #!/bin/bash
 
+set -e # stop script execution on any error
+set -o pipefail # consider errors in the pipeline
+trap 'deploy_failed' ERR
+
+function deploy_failed {
+  echo "Deployment failed! Notifying Rollbar..."
+  curl https://api.rollbar.com/api/1/item/ \
+    -H "X-Rollbar-Access-Token: c2eedbf883b644dca14781524e20688d" \
+    -d environment=production \
+    -d level=error \
+    -d framework=bash \
+    -d language=bash \
+    -d body="Deployment failed"
+  exit 1
+}
+
+
 # Переходим в директорию с проектом
 cd /home/wombatoff/dvmn_3
 
