@@ -48,6 +48,3 @@ npm ci --dev
 
 # Перезапускаем gunicorn (убедитесь, что у вас настроена системная служба для gunicorn)
 sudo systemctl restart gunicorn
-
-# Перезапускаем Nginx
-sudo systemctl restart nginx
