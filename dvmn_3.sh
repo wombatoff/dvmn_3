@@ -44,7 +44,7 @@ source venv/bin/activate
 yes | python -m pip install --upgrade pip && yes | pip install -r requirements.txt --no-cache-dir
 
 # Накатываем миграции БД
-python manage.py migrate
+python manage.py migrate --no-input
 
 # Собираем статику
 python manage.py collectstatic --no-input
