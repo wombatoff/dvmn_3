@@ -47,13 +47,6 @@ ROLLBAR = {
     'root': BASE_DIR,
 }
 
-if DEBUG:
-    ROLLBAR['environment'] = 'development'
-
-else:
-    ROLLBAR['environment'] = 'production'
-
-
 ROOT_URLCONF = 'star_burger.urls'
 
 DEBUG_TOOLBAR_PANELS = [
